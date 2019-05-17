@@ -212,7 +212,7 @@ extension AWSClient {
             fatalError("nioRequest.head.uri is invalid.")
         }
 
-        let signedURI = signer.signedURL(url: unsignedUrl)
+        let signedURI = signer.signedURL(url: unsignedUrl, method: awsRequest.httpMethod)
         nioRequest.head.uri = signedURI.absoluteString
         nioRequest.head.headers.replaceOrAdd(name: "Host", value: hostWithPort)
 
@@ -257,7 +257,7 @@ extension AWSClient {
 
     func createNioRequest(_ awsRequest: AWSRequest) throws -> Request {
         switch awsRequest.httpMethod {
-        case "GET":
+        case "GET", "HEAD":
             switch self.serviceProtocol.type {
             case .restjson:
                 return try createNIORequestWithSignedHeader(awsRequest)
