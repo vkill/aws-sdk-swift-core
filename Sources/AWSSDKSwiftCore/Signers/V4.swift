@@ -118,10 +118,13 @@ extension Signers {
             let credentialForSignature = credential
 
             var headersForSign = [
-                "x-amz-content-sha256": hexEncodedBodyHash(bodyData),
                 "x-amz-date": datetime,
-                "Host": url.hostWithPort!,
+                "Host": url.hostWithPort!
             ]
+
+            if method != "HEAD" {
+                headersForSign["x-amz-content-sha256"] = hexEncodedBodyHash(bodyData)
+            }
 
             for header in headers {
                 if unsignableHeaders.contains(header.key.lowercased()) { continue }

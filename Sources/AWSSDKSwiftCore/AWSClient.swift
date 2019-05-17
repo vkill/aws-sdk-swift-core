@@ -108,6 +108,9 @@ public struct AWSClient {
 extension AWSClient {
     fileprivate func invoke(_ nioRequest: Request) -> Future<Response>{
         let client = createHTTPClient(for: nioRequest)
+
+        print(nioRequest)
+
         let futureResponse = client.connect(nioRequest)
 
         futureResponse.whenComplete {
