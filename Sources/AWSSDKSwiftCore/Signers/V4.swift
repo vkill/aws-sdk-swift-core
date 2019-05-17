@@ -63,9 +63,9 @@ extension Signers {
         }
 
         func hexEncodedBodyHash(_ data: Data) -> String {
-            if data.isEmpty && service == "s3" {
-                return "UNSIGNED-PAYLOAD"
-            }
+            // if data.isEmpty && service == "s3" {
+            //     return "UNSIGNED-PAYLOAD"
+            // }
             return sha256(data).hexdigest()
         }
 
