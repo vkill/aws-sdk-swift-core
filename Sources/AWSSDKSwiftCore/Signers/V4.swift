@@ -63,9 +63,9 @@ extension Signers {
         }
 
         func hexEncodedBodyHash(_ data: Data) -> String {
-            // if data.isEmpty && service == "s3" {
-            //     return "UNSIGNED-PAYLOAD"
-            // }
+            if data.isEmpty && service == "s3" {
+                return "UNSIGNED-PAYLOAD"
+            }
             return sha256(data).hexdigest()
         }
 
@@ -118,7 +118,7 @@ extension Signers {
             let credentialForSignature = credential
 
             var headersForSign = [
-                "x-amz-content-sha256": hexEncodedBodyHash(bodyData),
+                "x-amz-content-sha256": bodyDigest,
                 "x-amz-date": datetime,
                 "Host": url.hostWithPort!,
             ]
