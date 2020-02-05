@@ -100,6 +100,7 @@ public final class HTTPClient {
             .connectTimeout(TimeAmount.seconds(5))
             .channelOption(ChannelOptions.socket(SocketOptionLevel(IPPROTO_TCP), TCP_NODELAY), value: 1)
             .channelInitializer { channel in
+                HTTPClient.logger.info("Channel initialize")
                 return channel.pipeline.addHTTPClientHandlers()
                     .flatMap {
                         return self.addSSLHandlerIfNeeded(channel.pipeline, hostname: hostname, port: port)
@@ -114,6 +115,7 @@ public final class HTTPClient {
             }
             .connect(host: hostname, port: port)
             .flatMap { channel -> EventLoopFuture<Void> in
+                HTTPClient.logger.info("Channel writeAndFlush")
                 return channel.writeAndFlush(request)
             }
             .whenFailure { error in
@@ -218,6 +220,8 @@ public final class HTTPClient {
             let request = unwrapOutboundIn(data)
             var head = request.head
 
+            HTTPClient.logger.info("HTTPClientRequestSerializer.write")
+
             head.headers.replaceOrAdd(name: "Host", value: hostname)
             head.headers.replaceOrAdd(name: "User-Agent", value: "AWS SDK Swift Core")
             head.headers.replaceOrAdd(name: "Accept", value: "*/*")
@@ -262,11 +266,13 @@ public final class HTTPClient {
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
             switch unwrapInboundIn(data) {
             case .head(let head):
+                HTTPClient.logger.info("HTTPClientResponseHandler.channelRead.head")
                 switch state {
                 case .ready: state = .parsingBody(head, nil)
                 case .parsingBody: promise.fail(HTTPClient.HTTPError.malformedHead)
                 }
             case .body(var body):
+                HTTPClient.logger.info("HTTPClientResponseHandler.channelRead.body")
                 switch state {
                 case .ready: promise.fail(HTTPClient.HTTPError.malformedBody)
                 case .parsingBody(let head, let existingData):
@@ -280,6 +286,7 @@ public final class HTTPClient {
                     state = .parsingBody(head, data)
                 }
             case .end(let tailHeaders):
+                HTTPClient.logger.info("HTTPClientResponseHandler.channelRead.end")
                 assert(tailHeaders == nil, "Unexpected tail headers")
                 switch state {
                 case .ready: promise.fail(HTTPClient.HTTPError.malformedHead)
