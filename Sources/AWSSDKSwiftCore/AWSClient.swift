@@ -5,7 +5,7 @@
 //  Created by Yuki Takei on 2017/03/13.
 //
 //
-
+import Logging
 import NIO
 import NIOHTTP1
 import NIOTransportServices
@@ -36,7 +36,9 @@ public class AWSClient {
         /// `EventLoopGroup` will be created by the client. When `syncShutdown` is called, created `EventLoopGroup` will be shut down as well.
         case useAWSClientShared
     }
-
+    
+    static let logger = Logger(label: "AWSClient")
+    
     let signer: Signers.V4
 
     let apiVersion: String
@@ -147,7 +149,7 @@ public class AWSClient {
         self.serviceProtocol = serviceProtocol
         self.serviceEndpoints = serviceEndpoints
         self.partitionEndpoint = partitionEndpoint
-        self.middlewares = middlewares
+        self.middlewares = middlewares.compactMap { type(of:$0) == AWSLoggingMiddleware.self ? nil : $0 } + [(AWSLoggingMiddleware(log: { message in AWSClient.logger.info("\(message)")}))]
         self.possibleErrorTypes = possibleErrorTypes ?? []
     }
 
