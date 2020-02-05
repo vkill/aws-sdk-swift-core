@@ -9,7 +9,7 @@
 // and the swift-server's swift-nio-http-client
 // https://github.com/swift-server/swift-nio-http-client
 //
-
+import Logging
 import NIO
 import NIOConcurrencyHelpers
 import NIOFoundationCompat
@@ -117,6 +117,7 @@ public final class HTTPClient {
                 return channel.writeAndFlush(request)
             }
             .whenFailure { error in
+                HTTPClient.logger.info("Connect failed \(error)")
                 response.fail(error)
         }
     }
@@ -171,6 +172,7 @@ public final class HTTPClient {
             headerHostname = hostname
         }
 
+        HTTPClient.logger.info("Connect \(url)")
 
         let response: EventLoopPromise<Response> = self.eventLoopGroup.next().makePromise()
 
@@ -295,4 +297,6 @@ public final class HTTPClient {
     
     private let eventLoopGroup: EventLoopGroup
     private let eventLoopGroupProvider: EventLoopGroupProvider
+    
+    static let logger = Logger(label: "HTTPClient")
 }
