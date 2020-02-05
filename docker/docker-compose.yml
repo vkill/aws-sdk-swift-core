@@ -8,6 +8,10 @@ services:
       - ..:/working
     working_dir: /working
 
+  build:
+    <<: *common
+    command: /bin/bash -xcl "swift build"
+
   test:
     <<: *common
     command: /bin/bash -xcl "swift test"

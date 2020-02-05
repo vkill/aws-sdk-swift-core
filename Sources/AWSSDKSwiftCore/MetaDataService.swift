@@ -7,6 +7,7 @@
 //
 
 #if os(Linux)
+import Logging
 import NIO
 import NIOHTTP1
 
@@ -30,6 +31,8 @@ enum MetaDataServiceError: Error {
 /// Object managing accessing of AWS credentials from various sources
 public struct MetaDataService {
 
+    static let logger = Logger(label: "MetaDataService")
+    
     /// return future holding a credential provider
     public static func getCredential(eventLoopGroup: EventLoopGroup) throws -> EventLoopFuture<CredentialProvider> {
         if let ecsCredentialProvider = ECSMetaDataServiceProvider() {
@@ -91,8 +94,10 @@ extension MetaDataServiceProvider {
             decoder.dateDecodingStrategy = .formatted(dateFormatter)
             // decode to associated type
             let metaData = try decoder.decode(MetaData.self, from: data)
+            MetaDataService.logger.info("Found credentials for with access key \(metaData.credential.accessKeyId)")
             return metaData.credential
         } catch {
+            MetaDataService.logger.info("Failed to decode credentials")
             return Credential(accessKeyId: "", secretAccessKey: "")
         }
     }
@@ -196,6 +201,8 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
     func getCredential(eventLoopGroup: EventLoopGroup) -> EventLoopFuture<CredentialProvider> {
         //  no point storing the session key as the credentials last as long
         var sessionTokenHeader: [String: String] = [:]
+        
+        MetaDataService.logger.info("Request credentials")
         // instance service expects absoluteString as uri...
         return request(
             uri:InstanceMetaDataServiceProvider.apiTokenURL,
@@ -208,13 +215,16 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
             if response.head.status == .ok,
                 let token = String(data: response.body, encoding: .utf8) {
                 sessionTokenHeader = ["X-aws-ec2-metadata-token":token]
+                MetaDataService.logger.info("Session token: \(sessionTokenHeader)")
             }
         }.flatMapError { error in
             // If we didn't find a session key then assume we are running IMDSv1 (we could be running from a Docker container
             // and the hop count for the PUT request is still set to 1)
-            return eventLoopGroup.next().makeSucceededFuture(())
-        }.flatMap { _ in
+            MetaDataService.logger.info("Didn't get session token")
+            return eventLoopGroup.next().makeSucceededFuture(Void())
+        }.flatMap { (_) -> EventLoopFuture<HTTPClient.Response> in
             // request rolename
+            MetaDataService.logger.info("Request role name")
             return self.request(
                 uri:InstanceMetaDataServiceProvider.baseURLString,
                 headers:sessionTokenHeader,
@@ -225,15 +235,21 @@ struct InstanceMetaDataServiceProvider: MetaDataServiceProvider {
             // extract rolename
             guard response.head.status == .ok,
                 let roleName = String(data: response.body, encoding: .utf8) else {
+                    MetaDataService.logger.info("Failed to get instance role name")
                     throw MetaDataServiceError.couldNotGetInstanceRoleName
             }
+            MetaDataService.logger.info("Instance role name \(roleName)")
             return "\(InstanceMetaDataServiceProvider.baseURLString)/\(roleName)"
-        }.flatMap { uri in
+        }.flatMap { (uri: String) -> EventLoopFuture<HTTPClient.Response> in
             // request credentials
+            MetaDataService.logger.info("Request credentials")
             return self.request(uri: uri, headers:sessionTokenHeader, timeout: 2, eventLoopGroup: eventLoopGroup)
-        }.flatMapThrowing { response in
+        }.flatMapThrowing { (response) throws -> CredentialProvider in
             // decode credentials
-            guard response.head.status == .ok else { throw MetaDataServiceError.couldNotGetInstanceMetadata }
+            guard response.head.status == .ok else {
+                MetaDataService.logger.info("Failed to get instance metdata")
+                throw MetaDataServiceError.couldNotGetInstanceMetadata
+            }
             return self.decodeCredential(response.body)
         }
     }
