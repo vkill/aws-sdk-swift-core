@@ -667,61 +667,65 @@ extension AWSClient {
     }
 
     internal func createError(for response: AWSHTTPResponse) -> Error {
-        let awsResponse = try? AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
-        let bodyDict: [String: Any] = (try? awsResponse?.body.asDictionary()) ?? [:]
+        do {
+            let awsResponse = try AWSResponse(from: response, serviceProtocolType: serviceProtocol.type)
+            let bodyDict: [String: Any] = (try awsResponse.body.asDictionary()) ?? [:]
 
-        var code: String?
-        var message: String?
+            var code: String?
+            var message: String?
 
-        switch serviceProtocol.type {
-        case .query:
-            guard case .xml(let element) = awsResponse?.body else { break }
-            guard let error = element.elements(forName: "Error").first else { break }
-            code = error.elements(forName: "Code").first?.stringValue
-            message = error.elements(forName: "Message").first?.stringValue
+            switch serviceProtocol.type {
+            case .query:
+                guard case .xml(let element) = awsResponse.body else { break }
+                guard let error = element.elements(forName: "Error").first else { break }
+                code = error.elements(forName: "Code").first?.stringValue
+                message = error.elements(forName: "Message").first?.stringValue
 
-        case .restxml:
-            guard case .xml(let element) = awsResponse?.body else { break }
-            code = element.elements(forName: "Code").first?.stringValue
-            message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
+            case .restxml:
+                guard case .xml(let element) = awsResponse.body else { break }
+                code = element.elements(forName: "Code").first?.stringValue
+                message = element.children(of:.element)?.filter({$0.name != "Code"}).map({"\($0.name!): \($0.stringValue!)"}).joined(separator: ", ")
 
-        case .restjson:
-            code = awsResponse?.headers["x-amzn-ErrorType"] as? String
-            message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
+            case .restjson:
+                code = awsResponse.headers["x-amzn-ErrorType"] as? String
+                message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
-        case .json:
-            code = bodyDict["__type"] as? String
-            message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
+            case .json:
+                code = bodyDict["__type"] as? String
+                message = bodyDict.filter({ $0.key.lowercased() == "message" }).first?.value as? String
 
-        default:
-            break
-        }
+            default:
+                break
+            }
 
-        if let errorCode = code {
-            for errorType in possibleErrorTypes {
-                if let error = errorType.init(errorCode: errorCode, message: message) {
+            if let errorCode = code {
+                for errorType in possibleErrorTypes {
+                    if let error = errorType.init(errorCode: errorCode, message: message) {
+                        return error
+                    }
+                }
+
+                if let error = AWSClientError(errorCode: errorCode, message: message) {
                     return error
                 }
+
+                if let error = AWSServerError(errorCode: errorCode, message: message) {
+                    return error
+                }
+
+                return AWSResponseError(errorCode: errorCode, message: message)
             }
 
-            if let error = AWSClientError(errorCode: errorCode, message: message) {
-                return error
+            let rawBodyString : String?
+            if let body = response.body {
+                rawBodyString = body.getString(at: 0, length: body.readableBytes)
+            } else {
+                rawBodyString = nil
             }
-
-            if let error = AWSServerError(errorCode: errorCode, message: message) {
-                return error
-            }
-
-            return AWSResponseError(errorCode: errorCode, message: message)
+            return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
+        } catch {
+            return error
         }
-
-        let rawBodyString : String?
-        if let body = response.body {
-            rawBodyString = body.getString(at: 0, length: body.readableBytes)
-        } else {
-            rawBodyString = nil
-        }
-        return AWSError(message: message ?? "Unhandled Error. Response Code: \(response.status.code)", rawBody: rawBodyString ?? "")
     }
 }
 
