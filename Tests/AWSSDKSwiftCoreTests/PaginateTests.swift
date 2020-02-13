@@ -29,7 +29,7 @@ class PaginateTests: XCTestCase {
             apiVersion: "2020-01-21",
             endpoint: "http://localhost:\(awsServer.serverPort)",
             middlewares: [AWSLoggingMiddleware()],
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
     }
     

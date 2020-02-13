@@ -107,7 +107,7 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
             middlewares: [],
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
 
         do {
@@ -126,7 +126,7 @@ class AWSClientTests: XCTestCase {
             service: "email",
             serviceProtocol: ServiceProtocol(type: .query),
             apiVersion: "2013-12-01",
-            httpClientProvider: .useAWSClientShared)
+            httpClientProvider: .createNew)
 
         do {
             let credentials = try client.credentialProvider.getCredential().wait()
@@ -168,7 +168,7 @@ class AWSClientTests: XCTestCase {
         serviceProtocol: ServiceProtocol(type: .query),
         apiVersion: "2013-12-01",
         middlewares: [AWSLoggingMiddleware()],
-        httpClientProvider: .useAWSClientShared
+        httpClientProvider: .createNew
     )
 
     let kinesisClient = AWSClient(
@@ -181,7 +181,7 @@ class AWSClientTests: XCTestCase {
         apiVersion: "2013-12-02",
         middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [KinesisErrorType.self],
-        httpClientProvider: .useAWSClientShared
+        httpClientProvider: .createNew
     )
 
     let s3Client = AWSClient(
@@ -196,7 +196,7 @@ class AWSClientTests: XCTestCase {
         partitionEndpoint: "us-east-1",
         middlewares: [AWSLoggingMiddleware()],
         possibleErrorTypes: [S3ErrorType.self],
-        httpClientProvider: .useAWSClientShared
+        httpClientProvider: .createNew
     )
 
     func testCreateAWSRequest() {
@@ -230,7 +230,7 @@ class AWSClientTests: XCTestCase {
             apiVersion: "2013-12-02",
             middlewares: [],
             possibleErrorTypes: [KinesisErrorType.self],
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
 
         do {
@@ -370,7 +370,7 @@ class AWSClientTests: XCTestCase {
             apiVersion: "2013-12-02",
             middlewares: [],
             possibleErrorTypes: [KinesisErrorType.self],
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
 
         do {
@@ -407,7 +407,7 @@ class AWSClientTests: XCTestCase {
             serviceProtocol: ServiceProtocol(type: .restxml),
             apiVersion: "2013-12-02",
             middlewares: [],
-            httpClientProvider: .useAWSClientShared
+            httpClientProvider: .createNew
         )
 
         do {
@@ -634,7 +634,7 @@ class AWSClientTests: XCTestCase {
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .useAWSClientShared
+                httpClientProvider: .createNew
             )
             let response = client.send(operation: "test", path: "/", httpMethod: "POST")
 
@@ -675,7 +675,7 @@ class AWSClientTests: XCTestCase {
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .useAWSClientShared
+                httpClientProvider: .createNew
             )
             let input = Input(e:.second, i: [1,2,4,8])
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
@@ -715,7 +715,7 @@ class AWSClientTests: XCTestCase {
                 apiVersion: "2020-01-21",
                 endpoint: awsServer.address,
                 middlewares: [AWSLoggingMiddleware()],
-                httpClientProvider: .useAWSClientShared
+                httpClientProvider: .createNew
             )
             let response: EventLoopFuture<Output> = client.send(operation: "test", path: "/", httpMethod: "POST")
 
