@@ -29,13 +29,16 @@ extension Body {
     /// initialize Body with Any. If it is Data, create .buffer() otherwise create a String describing the value
     init(anyValue: Any) {
         switch anyValue {
-        case let data as Data:
+        case let data as Data, AWSPayload.data(let data):
             var byteBuffer = ByteBufferAllocator().buffer(capacity: data.count)
             byteBuffer.writeBytes(data)
             self = .buffer(byteBuffer)
             
-        case let byteBuffer as ByteBuffer:
+        case let byteBuffer as ByteBuffer, AWSPayload.byteBuffer(let byteBuffer):
             self = .buffer(byteBuffer)
+            
+        case AWSPayload.empty:
+            self = .empty
             
         default:
             self = .text("\(anyValue)")
