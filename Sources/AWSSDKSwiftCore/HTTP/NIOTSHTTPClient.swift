@@ -37,10 +37,9 @@ public final class NIOTSHTTPClient {
 
     /// Errors returned from HTTPClient when parsing responses
     public enum HTTPError: Error {
-        case malformedHead
-        case malformedBody
         case malformedURL(url: String)
         case alreadyShutdown
+        case readTimeout
     }
 
     /// Initialise HTTPClient
@@ -81,6 +80,7 @@ public final class NIOTSHTTPClient {
             return channel.pipeline.addHTTPClientHandlers()
                 .flatMap {
                     let handlers : [ChannelHandler] = [
+                        IdleStateHandler(readTimeout: timeout),
                         HTTPClientRequestSerializer(hostname: headerHostname),
                         HTTPClientResponseHandler(promise: response)
                     ]
@@ -152,7 +152,17 @@ public final class NIOTSHTTPClient {
         }
 
         func errorCaught(context: ChannelHandlerContext, error: Error) {
-            context.fireErrorCaught(error)
+            print("unexpected error \(error), closing \(context)")
+            context.close(promise: nil)
+        }
+
+        func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+            if (event as? IdleStateHandler.IdleStateEvent) == .read {
+                self.state = .ready
+                promise.fail(HTTPError.readTimeout)
+            } else {
+                context.fireUserInboundEventTriggered(event)
+            }
         }
 
         func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -160,11 +170,11 @@ public final class NIOTSHTTPClient {
             case .head(let head):
                 switch state {
                 case .ready: state = .head(head)
-                case .head, .body: promise.fail(HTTPError.malformedHead)
+                case .head, .body: preconditionFailure("SwiftNIO Error: It should not send a head, when we are expecting body or end")
                 }
             case .body(let part):
                 switch state {
-                case .ready: promise.fail(HTTPError.malformedBody)
+                case .ready: preconditionFailure("SwiftNIO Error: It should not send a body, when we are expecting a head")
                 case .head(let head):
                     state = .body(head, part)
                 case .body(let head, var body):
@@ -174,7 +184,7 @@ public final class NIOTSHTTPClient {
                 }
             case .end:
                 switch state {
-                case .ready: promise.fail(HTTPError.malformedHead)
+                case .ready: preconditionFailure("NIO Error. It should not send an end without having sent a head")
                 case .head(let head):
                     let res = Response(head: head, body: nil)
                     if context.channel.isActive {

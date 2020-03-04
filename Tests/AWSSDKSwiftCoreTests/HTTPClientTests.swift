@@ -77,6 +77,26 @@ class NIOTSHTTPClientTests: XCTestCase {
         }
     }
 
+    func testIdleStateTimeout() {
+        do {
+            let request = AWSHTTPRequest(url: awsServer.addressURL, method: .POST, headers: HTTPHeaders(), body: nil)
+            let future = client.execute(request: request, timeout: .seconds(1))
+            DispatchQueue.global().async {
+                try? self.awsServer.process { request in
+                    Thread.sleep(forTimeInterval: 2)
+                    let response = AWSTestServer.Response(httpStatus: .ok, headers: [:], body: nil)
+                    return AWSTestServer.Result(output: response, continueProcessing: false)
+                }
+            }
+            _ = try future.wait()
+            XCTFail("We should have timed out, so shouldn't get here")
+        } catch NIOTSHTTPClient.HTTPError.readTimeout {
+            print("Success")
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    
     func testGet() {
         HTTPClientTests(client).testGet()
     }
