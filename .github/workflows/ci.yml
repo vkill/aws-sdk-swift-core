@@ -19,9 +19,9 @@ jobs:
     - name: SPM tests (thread sanitizer)
       run: swift test --sanitize=thread --parallel
     - name: SPM tests (address sanitizer)
-      run: swift test --sanitize=address --parallel
+      run: swift package clean && swift test --sanitize=address --parallel
     - name: SPM tests (release)
-      run: swift test --sanitize=address -c release -Xswiftc -enable-testing --parallel
+      run: swift package clean && swift test --sanitize=address -c release -Xswiftc -enable-testing --parallel
     - name: Generate xcode project
       run: swift package generate-xcodeproj
     - name: Xcode tests
@@ -51,11 +51,11 @@ jobs:
     - name: SPM tests (thread sanitizer)
       run: swift test --sanitize=thread --parallel --enable-test-discovery
     - name: SPM tests (address sanitizer)
-      run: swift test --sanitize=address --parallel --enable-test-discovery
+      run: swift package clean && swift test --sanitize=address --parallel --enable-test-discovery
     - name: SPM tests (release)
-      run: swift test --sanitize=address -c release -Xswiftc -enable-testing --parallel --enable-test-discovery
+      run: swift package clean && swift test --sanitize=address -c release -Xswiftc -enable-testing --parallel --enable-test-discovery
     - name: Test
-      run: swift test --parallel --enable-code-coverage --enable-test-discovery
+      run: swift package clean && swift test --parallel --enable-code-coverage --enable-test-discovery
     - name: Convert coverage files
       run: llvm-cov export -format="lcov" .build/debug/AWSSDKSwiftCorePackageTests.xctest -instr-profile .build/debug/codecov/default.profdata > info.lcov
     - name: Upload to codecov.io
