@@ -382,6 +382,8 @@ extension AWSClient {
             if let payload = Input.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
+                    case let awsPayload as AWSPayload:
+                        body = Body(awsPayload)
                     case is AWSShape:
                         let inputDictionary = try AWSShapeEncoder().dictionary(input)
                         let encoding = Input.getEncoding(for: payload)
@@ -390,7 +392,7 @@ extension AWSClient {
                         }
                         body = .json(try JSONSerialization.data(withJSONObject: payloadDict))
                     default:
-                        body = Body(anyValue: payloadBody)
+                        preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
                     body = .empty
@@ -421,6 +423,8 @@ extension AWSClient {
             if let payload = Input.payloadPath {
                 if let payloadBody = mirror.getAttribute(forKey: payload) {
                     switch payloadBody {
+                    case let awsPayload as AWSPayload:
+                        body = Body(awsPayload)
                     case is AWSShape:
                         let node = try AWSShapeEncoder().xml(input)
                         let encoding = Input.getEncoding(for: payload)
@@ -433,7 +437,7 @@ extension AWSClient {
                         }
                         body = .xml(element)
                     default:
-                        body = Body(anyValue: payloadBody)
+                        preconditionFailure("Cannot add this as a payload")
                     }
                 } else {
                     body = .empty

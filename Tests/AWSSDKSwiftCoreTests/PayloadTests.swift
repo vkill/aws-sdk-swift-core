@@ -12,9 +12,9 @@ import XCTest
 
 class PayloadTests: XCTestCase {
 
-    func testDataPayload() {
+    func testDataRequestPayload() {
         struct DataPayload: AWSShape {
-            static var payloadPath: String? = "Data"
+            static var payloadPath: String? = "data"
             let data: AWSPayload
         }
         
@@ -31,7 +31,7 @@ class PayloadTests: XCTestCase {
                 middlewares: [AWSLoggingMiddleware()],
                 eventLoopGroupProvider: .useAWSClientShared
             )
-            let input = DataPayload(data:.data("testDataPayload".data(using: .utf8)!))
+            let input = DataPayload(data: .string("testDataPayload"))
             let response = client.send(operation: "test", path: "/", httpMethod: "POST", input: input)
 
             try awsServer.process { request in
@@ -46,9 +46,9 @@ class PayloadTests: XCTestCase {
         }
     }
     
-    func testByteBufferPayload() {
+    func testByteBufferRequestPayload() {
         struct DataPayload: AWSShape {
-            static var payloadPath: String? = "Data"
+            static var payloadPath: String? = "data"
             let data: AWSPayload
         }
         
@@ -84,7 +84,8 @@ class PayloadTests: XCTestCase {
     
     static var allTests : [(String, (PayloadTests) -> () throws -> Void)] {
         return [
-            ("testDataPayload", testDataPayload),
+            ("testDataRequestPayload", testDataRequestPayload),
+            ("testByteBufferRequestPayload", testByteBufferRequestPayload),
         ]
     }
 }
