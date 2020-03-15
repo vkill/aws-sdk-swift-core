@@ -8,7 +8,7 @@ import XCTest
 
 class JSONCoderTests: XCTestCase {
     
-    struct Numbers : AWSShape {
+    struct Numbers : AWSDecodableShape & AWSEncodableShape {
 
        init(bool:Bool, integer:Int, float:Float, double:Double, intEnum:IntEnum) {
            self.bool = bool
@@ -50,7 +50,7 @@ class JSONCoderTests: XCTestCase {
        }
     }
 
-    struct StringShape : AWSShape {
+    struct StringShape : AWSDecodableShape & AWSEncodableShape {
        enum StringEnum : String, Codable {
            case first="first"
            case second="second"
@@ -62,12 +62,12 @@ class JSONCoderTests: XCTestCase {
        let stringEnum : StringEnum
     }
 
-    struct Arrays : AWSShape {
+    struct Arrays : AWSDecodableShape & AWSEncodableShape {
        let arrayOfNatives : [Int]
        let arrayOfShapes : [Numbers]
     }
 
-    struct Dictionaries : AWSShape {
+    struct Dictionaries : AWSDecodableShape & AWSEncodableShape {
        let dictionaryOfNatives : [String:Int]
        let dictionaryOfShapes : [String:StringShape]
 
@@ -77,7 +77,7 @@ class JSONCoderTests: XCTestCase {
        }
     }
 
-    struct Shape : AWSShape {
+    struct Shape : AWSDecodableShape & AWSEncodableShape {
        let numbers : Numbers
        let stringShape : StringShape
        let arrays : Arrays
@@ -89,7 +89,7 @@ class JSONCoderTests: XCTestCase {
        }
     }
 
-    struct ShapeWithDictionaries : AWSShape {
+    struct ShapeWithDictionaries : AWSDecodableShape & AWSEncodableShape {
        let shape : Shape
        let dictionaries : Dictionaries
 

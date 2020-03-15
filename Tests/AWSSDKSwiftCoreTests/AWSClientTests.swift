@@ -58,7 +58,7 @@ class AWSClientTests: XCTestCase {
         ]
     }
 
-    struct C: AWSShape {
+    struct C: AWSEncodableShape {
         public static var _encoding: [AWSMemberEncoding] = [
              AWSMemberEncoding(label: "value", location: .header(locationName: "value"))
         ]
@@ -69,7 +69,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    struct E: AWSShape {
+    struct E: AWSEncodableShape & Decodable {
         let Member = ["memberKey": "memberValue", "memberKey2" : "memberValue2"]
 
         private enum CodingKeys: String, CodingKey {
@@ -77,7 +77,7 @@ class AWSClientTests: XCTestCase {
         }
     }
 
-    struct F: AWSShape {
+    struct F: AWSEncodableShape & AWSShapeWithPayload {
         public static let payloadPath: String? = "fooParams"
 
         public let fooParams: E?
@@ -308,7 +308,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testCreateAwsRequestWithKeywordInHeader() {
-        struct KeywordRequest: AWSShape {
+        struct KeywordRequest: AWSEncodableShape {
             static var _encoding: [AWSMemberEncoding] = [
                 AWSMemberEncoding(label: "repeat", location: .header(locationName: "repeat")),
             ]
@@ -325,7 +325,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testCreateAwsRequestWithKeywordInQuery() {
-        struct KeywordRequest: AWSShape {
+        struct KeywordRequest: AWSEncodableShape {
             static var _encoding: [AWSMemberEncoding] = [
                 AWSMemberEncoding(label: "self", location: .querystring(locationName: "self")),
             ]
@@ -414,7 +414,7 @@ class AWSClientTests: XCTestCase {
     }
     
     func testCreateWithXMLNamespace() {
-        struct Input: AWSShape {
+        struct Input: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             let number: Int
         }
@@ -433,11 +433,11 @@ class AWSClientTests: XCTestCase {
     
     
     func testCreateWithPayloadAndXMLNamespace() {
-        struct Payload: AWSShape {
+        struct Payload: AWSEncodableShape {
             public static let _xmlNamespace: String? = "https://test.amazonaws.com/doc/2020-03-11/"
             let number: Int
         }
-        struct Input: AWSShape {
+        struct Input: AWSEncodableShape & AWSShapeWithPayload {
             public static let payloadPath: String? = "payload"
             let payload: Payload
         }
@@ -482,7 +482,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateXMLResponse() {
-        class Output : AWSShape {
+        class Output : AWSDecodableShape {
             let name : String
         }
         let responseBody = "<Output><name>hello</name></Output>"
@@ -500,7 +500,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateXMLPayloadResponse() {
-        class Output : AWSShape {
+        class Output : AWSDecodableShape & AWSShapeWithPayload {
             static let payloadPath: String? = "name"
             let name : String
         }
@@ -534,7 +534,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateRawResponseError() {
-        class Output : AWSShape {
+        class Output : AWSDecodableShape & AWSShapeWithPayload {
             static let payloadPath: String? = "output"
             public static var _members = [AWSMemberEncoding(label: "output", encoding: .blob)]
             let output : Data
@@ -555,7 +555,7 @@ class AWSClientTests: XCTestCase {
 
 
     func testValidateJSONResponse() {
-        class Output : AWSShape {
+        class Output : AWSDecodableShape {
             let name : String
         }
         let response = AWSHTTPResponseImpl(
@@ -572,10 +572,10 @@ class AWSClientTests: XCTestCase {
     }
 
     func testValidateJSONPayloadResponse() {
-        class Output2 : AWSShape {
+        struct Output2 : AWSDecodableShape {
             let name : String
         }
-        class Output : AWSShape {
+        struct Output : AWSDecodableShape & AWSShapeWithPayload {
             static let payloadPath: String? = "output2"
             let output2 : Output2
         }
@@ -610,11 +610,11 @@ class AWSClientTests: XCTestCase {
 
     
     func testProcessHAL() {
-        class Output : AWSShape {
+        struct Output : AWSDecodableShape {
             let s: String
             let i: Int
         }
-        class Output2 : AWSShape {
+        struct Output2 : AWSDecodableShape {
             let a: [Output]
             let d: Double
             let b: Bool
@@ -642,10 +642,10 @@ class AWSClientTests: XCTestCase {
     }
 
     func testDataInJsonPayload() {
-        struct DataContainer: AWSShape {
+        struct DataContainer: AWSEncodableShape {
             let data: Data
         }
-        struct J: AWSShape {
+        struct J: AWSEncodableShape & AWSShapeWithPayload {
             public static let payloadPath: String? = "dataContainer"
             let dataContainer: DataContainer
         }
@@ -663,7 +663,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testPayloadDataInResponse() {
-        struct Response: AWSShape {
+        struct Response: AWSDecodableShape & AWSShapeWithPayload {
             public static let payloadPath: String? = "data"
             public static var _encoding = [
                 AWSMemberEncoding(label: "data", encoding: .blob),
@@ -719,7 +719,7 @@ class AWSClientTests: XCTestCase {
             case first
             case second
         }
-        struct Input : AWSShape {
+        struct Input : AWSEncodableShape & Decodable {
             let e: InputEnum
             let i: [Int64]
         }
@@ -756,7 +756,7 @@ class AWSClientTests: XCTestCase {
     }
 
     func testClientNoInputWithOutput() {
-        struct Output : AWSShape {
+        struct Output : AWSDecodableShape & Encodable {
             let s: String
             let i: Int64
         }

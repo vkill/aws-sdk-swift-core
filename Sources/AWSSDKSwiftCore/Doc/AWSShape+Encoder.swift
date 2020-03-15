@@ -8,7 +8,7 @@
 import struct Foundation.Data
 import class  Foundation.JSONEncoder
 
-internal extension AWSShape {
+internal extension AWSEncodableShape {
 
     /// Encode AWSShape as JSON
     func encodeAsJSON() throws -> Data {

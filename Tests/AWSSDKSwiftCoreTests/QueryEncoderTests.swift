@@ -20,7 +20,7 @@ class QueryEncoderTests: XCTestCase {
         return nil
     }
     
-    func testQuery<Input: AWSShape>(_ value: Input, query: String) {
+    func testQuery<Input: Encodable>(_ value: Input, query: String) {
         do {
             let queryDict = try QueryEncoder().encode(value)
             let query2 = queryString(dictionary: queryDict)
@@ -30,7 +30,7 @@ class QueryEncoderTests: XCTestCase {
         }
     }
     func testSimpleStructureEncode() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             let a : String
             let b : Int
             
@@ -44,7 +44,7 @@ class QueryEncoderTests: XCTestCase {
     }
     
     func testContainingStructureEncode() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             let a : Int
             let b : String
             
@@ -53,7 +53,7 @@ class QueryEncoderTests: XCTestCase {
                 case b = "B"
             }
         }
-        struct Test2 : AWSShape {
+        struct Test2 : AWSEncodableShape {
             let t : Test
             
             private enum CodingKeys: String, CodingKey {
@@ -65,7 +65,7 @@ class QueryEncoderTests: XCTestCase {
     }
 
     func testEnumEncode() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             enum TestEnum : String, Codable {
                 case first = "first"
                 case second = "second"
@@ -82,7 +82,7 @@ class QueryEncoderTests: XCTestCase {
     }
 
     func testArrayEncode() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             let a : [Int]
             
             private enum CodingKeys: String, CodingKey {
@@ -94,14 +94,14 @@ class QueryEncoderTests: XCTestCase {
     }
     
     func testArrayOfStructuresEncode() {
-        struct Test2 : AWSShape {
+        struct Test2 : AWSEncodableShape {
             let b : String
             
             private enum CodingKeys: String, CodingKey {
                 case b = "B"
             }
         }
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "A", encoding:.list(member: "m") )]
             let a : [Test2]
             
@@ -114,7 +114,7 @@ class QueryEncoderTests: XCTestCase {
     }
     
     func testDictionaryEncode() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "A", encoding:.map(entry: "entry", key: "key", value: "value"))]
             let a : [String:Int]
             
@@ -127,14 +127,14 @@ class QueryEncoderTests: XCTestCase {
     }
     
     func testDictionaryEnumKeyEncode() {
-        struct Test2 : AWSShape {
+        struct Test2 : AWSEncodableShape {
             let b : String
             
             private enum CodingKeys: String, CodingKey {
                 case b = "B"
             }
         }
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "A", encoding:.map(entry: "entry", key: "key", value: "value"))]
             enum TestEnum : String, Codable {
                 case first = "first"
@@ -151,7 +151,7 @@ class QueryEncoderTests: XCTestCase {
     }
     
     func testArrayEncodingEncode() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "a", encoding:.list(member:"item"))]
             let a : [Int]
         }
@@ -160,7 +160,7 @@ class QueryEncoderTests: XCTestCase {
     }
     
     func testDictionaryEncodingEncode() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "A", encoding:.map(entry: "item", key: "k", value: "v"))]
             let a : [String:Int]
             
@@ -173,7 +173,7 @@ class QueryEncoderTests: XCTestCase {
     }
     
     func testDictionaryEncodingEncode2() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             static let _encoding = [AWSMemberEncoding(label: "A", encoding:.flatMap(key: "name", value: "entry"))]
             let a : [String:Int]
             
@@ -187,7 +187,7 @@ class QueryEncoderTests: XCTestCase {
     
     // array performance in QueryEncoder is slower than expected
     func testQueryArrayPerformance() {
-        struct Test : AWSShape {
+        struct Test : AWSEncodableShape {
             let a : [Int]
             
             private enum CodingKeys: String, CodingKey {

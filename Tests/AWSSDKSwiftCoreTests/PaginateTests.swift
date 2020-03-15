@@ -38,7 +38,8 @@ class PaginateTests: XCTestCase {
     }
     
     // test structures/functions
-    struct CounterInput: AWSShape, AWSPaginateIntToken {
+    // conform to Decodable so server can decode these
+    struct CounterInput: AWSEncodableShape, AWSPaginateIntToken, Decodable {
         let inputToken: Int?
         let pageSize: Int
         
@@ -51,7 +52,8 @@ class PaginateTests: XCTestCase {
             return .init(inputToken: token, pageSize: self.pageSize)
         }
     }
-    struct CounterOutput: AWSShape {
+    // conform to Encodable so server can encode these
+    struct CounterOutput: AWSDecodableShape, Encodable {
         let array: [Int]
         let outputToken: Int?
     }
@@ -105,7 +107,8 @@ class PaginateTests: XCTestCase {
     }
     
     // test structures/functions
-    struct StringListInput: AWSShape, AWSPaginateStringToken {
+    // conform to Decodable so server can decode these
+    struct StringListInput: AWSEncodableShape, AWSPaginateStringToken, Decodable {
         let inputToken: String?
         let pageSize: Int
         
@@ -118,7 +121,8 @@ class PaginateTests: XCTestCase {
             return .init(inputToken: token, pageSize: self.pageSize)
         }
     }
-    struct StringListOutput: AWSShape {
+    // conform to Encodable so server can encode these
+    struct StringListOutput: AWSDecodableShape, Encodable {
         let array: [String]
         let outputToken: String?
     }
