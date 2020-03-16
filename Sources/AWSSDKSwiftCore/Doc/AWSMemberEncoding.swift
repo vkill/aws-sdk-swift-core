@@ -13,28 +13,13 @@
 /// - While encoding a Collection as XML or query string define additional element names (label set to member name in json model,
 ///     shapeEncoding set to one of collection encoding types, if codingkey is different to label then set it to .body(codingkey))
 /// - When encoding payload data blob (label set to member name in json model, shapeEncoding set to .blob)
-public struct AWSMemberEncoding {
+public enum AWSMemberEncoding {
     
-    /// Location of AWSMemberEncoding.
-    public enum Location {
-        case uri(locationName: String)
-        case querystring(locationName: String)
-        case header(locationName: String)
-        case body(locationName: String)
-        
-        public var name: String {
-            switch self {
-            case .uri(locationName: let name):
-                return name
-            case .querystring(locationName: let name):
-                return name
-            case .header(locationName: let name):
-                return name
-            case .body(locationName: let name):
-                return name
-            }
-        }
-    }
+    case header(name: String, header: String)
+    case uri(name: String, uri: String)
+    case query(name: String, query: String)
+    case payload(name: String, payload: String? = nil, raw: Bool = false)
+    case collection(key: String, encoding: ShapeEncoding)
     
     /// How the AWSMemberEncoding is serialized in XML and Query formats. Used for collection elements.
     public enum ShapeEncoding {
@@ -48,20 +33,5 @@ public struct AWSMemberEncoding {
         case flatMap(key: String, value: String)
         /// encode dictionary with multiple pairs of `key` and `value` entries, enclosed by element `entry`
         case map(entry: String, key: String, value: String)
-        /// shape is stored as data blob in body
-        case blob
-    }
-    
-    /// name of member
-    public let label: String
-    /// where to find or place member
-    public let location: Location?
-    /// How shape is serialized
-    public let shapeEncoding: ShapeEncoding
-
-    public init(label: String, location: Location? = nil, encoding: ShapeEncoding = .default) {
-        self.label = label
-        self.location = location
-        self.shapeEncoding = encoding
     }
 }

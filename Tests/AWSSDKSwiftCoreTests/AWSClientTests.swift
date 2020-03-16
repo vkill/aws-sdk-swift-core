@@ -60,7 +60,7 @@ class AWSClientTests: XCTestCase {
 
     struct C: AWSShape {
         public static var _encoding: [AWSMemberEncoding] = [
-             AWSMemberEncoding(label: "value", location: .header(locationName: "value"))
+            .header(name: "value", header: "value")
         ]
         let value = "<html><body><a href=\"https://redsox.com\">Test</a></body></html>"
 
@@ -310,7 +310,7 @@ class AWSClientTests: XCTestCase {
     func testCreateAwsRequestWithKeywordInHeader() {
         struct KeywordRequest: AWSShape {
             static var _encoding: [AWSMemberEncoding] = [
-                AWSMemberEncoding(label: "repeat", location: .header(locationName: "repeat")),
+                .header(name: "repeat", header: "repeat"),
             ]
             let `repeat`: String
         }
@@ -327,14 +327,14 @@ class AWSClientTests: XCTestCase {
     func testCreateAwsRequestWithKeywordInQuery() {
         struct KeywordRequest: AWSShape {
             static var _encoding: [AWSMemberEncoding] = [
-                AWSMemberEncoding(label: "self", location: .querystring(locationName: "self")),
+                .query(name: "self", query: "Self"),
             ]
             let `self`: String
         }
         do {
             let request = KeywordRequest(self: "KeywordRequest")
             let awsRequest = try s3Client.createAWSRequest(operation: "Keyword", path: "/", httpMethod: "POST", input: request)
-            XCTAssertEqual(awsRequest.url, URL(string:"https://s3.amazonaws.com/?self=KeywordRequest")!)
+            XCTAssertEqual(awsRequest.url, URL(string:"https://s3.amazonaws.com/?Self=KeywordRequest")!)
             XCTAssertEqual(awsRequest.body.asByteBuffer(), nil)
         } catch {
             XCTFail(error.localizedDescription)
@@ -536,7 +536,7 @@ class AWSClientTests: XCTestCase {
     func testValidateRawResponseError() {
         class Output : AWSShape {
             static let payloadPath: String? = "output"
-            public static var _members = [AWSMemberEncoding(label: "output", encoding: .blob)]
+            public static var _members: [AWSMemberEncoding] = [.payload(name: "output", raw: true)]
             let output : Data
         }
         do {
@@ -665,8 +665,8 @@ class AWSClientTests: XCTestCase {
     func testPayloadDataInResponse() {
         struct Response: AWSShape {
             public static let payloadPath: String? = "data"
-            public static var _encoding = [
-                AWSMemberEncoding(label: "data", encoding: .blob),
+            public static var _encoding: [AWSMemberEncoding] = [
+                .payload(name: "data", raw: true),
             ]
             let data: Data
         }

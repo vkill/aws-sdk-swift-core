@@ -38,18 +38,22 @@ extension AWSShape {
     }
 
     /// return member with provided name
-    public static func getEncoding(for: String) -> AWSMemberEncoding? {
-        return _encoding.first {$0.label == `for`}
+    public static func getPayloadEncoding(for: String) -> (name: String?, raw: Bool)? {
+        for member in _encoding {
+            guard case .payload(let name, let payloadName, let raw) = member else { continue }
+            if name == `for` {
+                return (name: payloadName, raw: raw)
+            }
+        }
+        return nil
     }
 
     /// return list of member variables serialized in the URL path
     public static var pathParams: [String: String] {
         var params: [String: String] = [:]
         for member in _encoding {
-            guard let location = member.location else { continue }
-            if case .uri(let name) = location {
-                params[name] = member.label
-            }
+            guard case .uri(let name, let uri) = member else { continue }
+            params[uri] = name
         }
         return params
     }
@@ -58,10 +62,8 @@ extension AWSShape {
     public static var headerParams: [String: String] {
         var params: [String: String] = [:]
         for member in _encoding {
-            guard let location = member.location else { continue }
-            if case .header(let name) = location {
-                params[name] = member.label
-            }
+            guard case .header(let name, let header) = member else { continue }
+            params[header] = name
         }
         return params
     }
@@ -70,10 +72,8 @@ extension AWSShape {
     public static var queryParams: [String: String] {
         var params: [String: String] = [:]
         for member in _encoding {
-            guard let location = member.location else { continue }
-            if case .querystring(let name) = location {
-                params[name] = member.label
-            }
+            guard case .query(let name, let query) = member else { continue }
+            params[query] = name
         }
         return params
     }
@@ -154,7 +154,7 @@ extension AWSShape {
 extension AWSMemberEncoding.ShapeEncoding {
     public var xmlEncoding : XMLContainerCoding? {
         switch self {
-        case .default, .blob:
+        case .default:
             return nil
         case .flatList:
             return .default
@@ -171,20 +171,17 @@ extension AWSMemberEncoding.ShapeEncoding {
 /// extension to AWSShape that returns XML container encoding for members of it
 extension AWSShape {
     /// return member for CodingKey
-    public static func getEncoding(forKey: CodingKey) -> AWSMemberEncoding? {
-        return _encoding.first {
-            if let location = $0.location, case .body(let name) = location {
-                return name == forKey.stringValue
-            } else {
-                return $0.label == forKey.stringValue
+    public static func getEncoding(forKey: CodingKey) -> AWSMemberEncoding.ShapeEncoding? {
+        for member in _encoding {
+            guard case .collection(let key, let encoding) = member else { continue }
+            if key == forKey.stringValue {
+                return encoding
             }
         }
+        return nil
     }
 
     public static func getXMLContainerCoding(for key: CodingKey) -> XMLContainerCoding? {
-        if let encoding = getEncoding(forKey: key) {
-            return encoding.shapeEncoding.xmlEncoding
-        }
-        return nil
+        return getEncoding(forKey: key)?.xmlEncoding
     }
 }

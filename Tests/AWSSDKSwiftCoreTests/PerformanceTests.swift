@@ -14,10 +14,10 @@ import AsyncHTTPClient
 
 struct HeaderRequest: AWSShape {
     static var _encoding: [AWSMemberEncoding] = [
-        AWSMemberEncoding(label: "Header1", location: .header(locationName: "Header1")),
-        AWSMemberEncoding(label: "Header2", location: .header(locationName: "Header2")),
-        AWSMemberEncoding(label: "Header3", location: .header(locationName: "Header3")),
-        AWSMemberEncoding(label: "Header4", location: .header(locationName: "Header4"))
+        .header(name: "header1", header: "Header1"),
+        .header(name: "header2", header: "Header2"),
+        .header(name: "header3", header: "Header3"),
+        .header(name: "header4", header: "Header4")
     ]
 
     let header1: String
@@ -42,7 +42,7 @@ struct PayloadRequest: AWSShape {
 
 struct MixedRequest: AWSShape {
     static var _encoding: [AWSMemberEncoding] = [
-        AWSMemberEncoding(label: "item1", location: .header(locationName: "item1")),
+        .header(name: "item1", header: "item1")
     ]
 
     let item1: String
