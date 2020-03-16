@@ -279,6 +279,7 @@ public class XML {
         /// add a child node to the xml element
         public func addChild(_ node: XML.Node) {
             assert(node.kind != .namespace && node.kind != .attribute && node.kind != .document)
+            assert(node !== self)
             if children == nil {
                 children = [node]
             } else {
