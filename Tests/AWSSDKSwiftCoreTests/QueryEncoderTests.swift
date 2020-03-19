@@ -115,7 +115,7 @@ class QueryEncoderTests: XCTestCase {
     
     func testDictionaryEncode() {
         struct Test : AWSShape {
-            @Coding<DictionaryCoder<DictionaryEntryKeyValue, String, Int>> var a : [String:Int]
+            @Coding<DefaultDictionaryCoder> var a : [String:Int]
             
             private enum CodingKeys: String, CodingKey {
                 case a = "A"
@@ -138,7 +138,7 @@ class QueryEncoderTests: XCTestCase {
                 case first = "first"
                 case second = "second"
             }
-            @Coding<DictionaryCoder<DictionaryEntryKeyValue, TestEnum, Test2>> var a : [TestEnum:Test2]
+            @Coding<DefaultDictionaryCoder> var a : [TestEnum:Test2]
             
             private enum CodingKeys: String, CodingKey {
                 case a = "A"
